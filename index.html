@@ -75,10 +75,17 @@
             margin-bottom: 8px
         }
 
-        .nav {
-            display: grid;
-            gap: 5px
-        }
+        .nav { display:grid; gap:5px }
+        .nav-group{display:grid;gap:4px}
+        .nav-arrow{margin-left:auto;opacity:.75}
+        .nav-submenu{display:none;padding:3px 0 5px 34px;gap:4px}
+        .nav-submenu.open{display:grid}
+        .nav-submenu button{border:0;background:transparent;color:#a9c2c4;text-align:left;padding:9px 10px;border-radius:8px;font:inherit;font-size:12px;cursor:pointer}
+        .nav-submenu button:hover,.nav-submenu button.active{background:#1c4148;color:white}
+        .invoice-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+        .invoice-tabs button{border:1px solid var(--line);background:white;border-radius:9px;padding:10px 14px;color:var(--ink);font-weight:650;cursor:pointer}
+        .invoice-tabs button.active{background:var(--teal2);border-color:var(--teal);color:var(--teal)}
+        .invoice-panel{display:none}.invoice-panel.active{display:block}
 
         .nav button {
             border: 0;
@@ -674,6 +681,7 @@
                 height: 58px
             }
         }
+        .role-tag{display:inline-block;padding:4px 8px;border-radius:20px;background:#e4f4f1;color:#087f78;font-size:11px;font-weight:700}.status-draft{background:#fff4df;color:#98630c}.status-submitted{background:#e4f4f1;color:#087f78}.user-actions{display:flex;gap:6px;flex-wrap:wrap}.small-btn{padding:6px 9px;font-size:12px}.user-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}.user-form input,.user-form select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px}.user-form label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}@media(max-width:600px){.user-form{grid-template-columns:1fr}}
     </style>
 </head>
 
@@ -682,7 +690,7 @@
     <section class="login-screen" id="loginScreen">
         <form class="login-card" id="loginForm">
             <div class="login-brand">
-                <div class="logo">R</div><span>Admin Dashboard</span>
+                <div class="logo">R</div><span>RallyStock</span>
             </div>
             <h1>Welcome back</h1>
             <p class="sub">Sign in to manage your inventory.</p>
@@ -715,8 +723,7 @@
                             class="ico">▣</span><span class="txt">Products</span></button><button
                         data-page="stock"><span class="ico">⇄</span><span class="txt">Stock
                             Management</span></button><button data-page="sales"><span class="ico">◷</span><span
-                            class="txt">Sales</span></button><button data-page="invoice"><span class="ico">▤</span><span
-                            class="txt">E-Invoice</span></button></div>
+                            class="txt">Sales</span></button><div class="nav-group" id="invoiceNavGroup"><button type="button" data-page="invoice" onclick="toggleInvoiceMenu()"><span class="ico">▤</span><span class="txt">E-Invoice</span><span class="nav-arrow" id="invoiceArrow">⌄</span></button><div class="nav-submenu" id="invoiceSubmenu"><button type="button" onclick="openInvoiceSection('create')">＋ Create Sales Record & Submit</button><button type="button" onclick="openInvoiceSection('status')">◷ E-Invoice Status</button></div></div><button data-page="users" id="usersNav"><span class="ico">♙</span><span class="txt">User Management</span></button></div>
             </div>
             <div class="sidefoot">Demo workspace<br>Second-hand sports store</div>
         </aside>
@@ -929,51 +936,53 @@
                 </section>
                 <section class="page" id="invoice">
                     <div class="heading">
-                        <div>
-                            <div class="eyebrow">FINANCE</div>
-                            <h1 class="h1">E-Invoice</h1>
-                            <p class="sub">Invoice records and MyInvois integration preview.</p>
-                        </div><button class="btn primary" onclick="makeInvoice()">＋ Create Invoice</button>
+                        <div><div class="eyebrow">FINANCE</div><h1 class="h1">E-Invoice Workspace</h1>
+                        <p class="sub">Record cash sales and prepare a monthly consolidation review.</p></div>
+                        <button class="btn primary" onclick="openCashSale()">＋ Record Cash Sale</button>
                     </div>
-                    <div class="card invoicebox">
-                        <div class="invoicehead">
-                            <div>
-                                <div class="eyebrow">RALLYSTOCK DEMO STORE</div>
-                                <div class="invoicebig">Invoice</div>
-                                <div class="muted">#INV-024 · 26 Nov 2026</div>
-                            </div>
-                            <div style="text-align:right"><span class="pill low">Demo · Not submitted</span>
-                                <p class="muted">Malaysia</p>
-                            </div>
-                        </div>
-                        <div style="padding:20px 0">
-                            <div class="muted">BILL TO</div><b>Walk-in Customer</b>
-                            <p class="muted">Customer details can be captured for e-Invoice submission.</p>
-                        </div>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Description</th>
-                                    <th>Qty</th>
-                                    <th>Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Yonex Astrox 88D (Pre-loved)</td>
-                                    <td>1</td>
-                                    <td>RM 280.00</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div style="text-align:right;padding:20px 0;font-size:19px;font-weight:800">Total: RM 280.00
-                        </div>
-                        <div class="notice">Prototype only: MyInvois API submission is not connected. Production
-                            integration requires business credentials, API testing and validation.</div>
+                    <div class="invoice-tabs" style="display:none"><button id="eiTabCreate" class="active" onclick="showInvoiceTab('create')">Create Sales Record & Submit</button><button id="eiTabStatus" onclick="showInvoiceTab('status')">E-Invoice Status</button></div>
+                    <div class="invoice-panel active" id="eiCreatePanel">
+                    <div class="stats">
+                        <div class="card"><div class="stathead">Cash sales this month</div><div class="num" id="eiSalesCount">0</div><div class="trend">Recorded transactions</div></div>
+                        <div class="card"><div class="stathead">Sales value</div><div class="num" id="eiSalesValue">RM 0.00</div><div class="trend">Before any applicable adjustments</div></div>
+                        <div class="card"><div class="stathead">Awaiting review</div><div class="num" id="eiPending">0</div><div class="trend">Not yet included in a draft</div></div>
+                        <div class="card"><div class="stathead">Draft consolidations</div><div class="num" id="eiDrafts">0</div><div class="trend">Not submitted to MyInvois</div></div>
                     </div>
+                    <div class="card" style="margin-bottom:16px">
+                        <div class="heading" style="margin-bottom:12px"><div><div class="cardtitle">Monthly consolidation review</div><div class="carddesc" style="margin:4px 0 0">Select a month to group eligible sales records for review.</div></div></div>
+                        <div class="toolbar"><input class="search" type="month" id="eiMonth"><button class="btn secondary" onclick="createConsolidation()">Create consolidation draft</button><button class="btn primary" onclick="submitToMyInvois()">Submit to MyInvois</button><button class="btn secondary" onclick="exportCashSales()">Export sales CSV</button></div>
+                        <div id="eiDraftNotice" class="notice">Demo workspace only. Creating a draft does not submit anything to LHDN/MyInvois. Confirm transaction eligibility and current LHDN rules before submission.</div>
+                        <div id="eiDraftList" style="margin-top:14px"></div>
+                    </div>
+                    <div class="heading" style="margin-bottom:12px"><div><div class="cardtitle">Cash sales records</div><div class="carddesc" style="margin:4px 0 0">Walk-in / anonymous customer sales. Do not enter personal data unless needed.</div></div></div>
+                    <div class="tablewrap"><table><thead><tr><th>Reference</th><th>Date</th><th>Description</th><th>Payment</th><th>Amount</th><th>Review status</th></tr></thead><tbody id="eiSalesRows"><tr><td colspan="6" class="empty">No cash sales recorded yet.</td></tr></tbody></table></div>
+                    <div class="notice" style="margin-top:16px">Important: this is a front-end prototype using browser storage. It does not connect to MyInvois, validate tax eligibility, issue a legally valid e-Invoice, or securely store business records. Production use requires a backend, access controls, backups, MyInvois API integration and accountant/LHDN rule review.</div>
+                    </div>
+                    <div class="invoice-panel" id="eiStatusPanel">
+                        <div class="card" style="margin-bottom:14px"><div class="cardtitle">MyInvois submission status</div><p class="carddesc">This page is for checking the result after an actual submission.</p><div class="notice" style="margin-top:12px"><b>API not connected:</b> RallyStock cannot submit to LHDN or retrieve live status yet. Drafts will remain marked as Not submitted.</div></div>
+                        <div class="card"><div class="cardtitle">Submission history</div><div class="tablewrap"><table><thead><tr><th>Reference</th><th>Period</th><th>Amount</th><th>Status</th><th>MyInvois UUID / Error</th></tr></thead><tbody id="submissionRows"><tr><td colspan="5" class="empty">No submissions yet. A draft is not a submission.</td></tr></tbody></table></div></div>
+                    </div>
+                </section>
+                <section class="page" id="users">
+                    <div class="heading"><div><div class="eyebrow">ACCESS CONTROL</div><h1 class="h1">User Management</h1><p class="sub">Create accounts, assign roles and control access to RallyStock.</p></div></div>
+                    <div class="card" style="margin-bottom:16px"><div class="cardtitle">Add user</div><form id="userForm" class="user-form"><div><label>Full name</label><input name="name" required placeholder="Staff name"></div><div><label>Email</label><input name="email" type="email" required placeholder="name@company.com"></div><div><label>Temporary password</label><input name="password" type="password" required minlength="6" placeholder="At least 6 characters"></div><div><label>Role</label><select name="role" id="newUserRole"><option value="Admin">Admin</option><option value="Staff">Staff</option></select></div><div style="grid-column:1/-1"><button class="btn primary" type="submit">＋ Create user</button></div></form><div class="notice">Superadmin accounts are protected. Only the Superadmin can create accounts and change Admin/Staff roles in this demo.</div></div>
+                    <div class="card"><div class="cardtitle">Team accounts</div><div class="tablewrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody id="userRows"></tbody></table></div></div>
+                    <div class="notice" style="margin-top:16px">Prototype only: accounts are stored in this browser. Production must use server-side authentication, hashed passwords, database-backed roles and audit logs. Never use this demo to protect real business data.</div>
                 </section>
             </div>
         </main>
+    </div>
+    <div class="modalbg" id="cashSaleModal">
+        <div class="modal"><div class="modalhead"><div><div class="eyebrow">SALES</div><h2 style="margin:4px 0">Record cash sale</h2></div><button class="close" onclick="closeCashSale()">✕</button></div>
+            <form id="cashSaleForm"><div class="formgrid">
+                <div class="field"><label>Sale date & time</label><input name="date" type="datetime-local" required></div>
+                <div class="field"><label>Payment method</label><select name="payment"><option>Cash</option><option>DuitNow</option><option>Card</option><option>Other</option></select></div>
+                <div class="field" style="grid-column:1/-1"><label>Description / items sold</label><input name="description" required placeholder="e.g. Used badminton racket x 1"></div>
+                <div class="field"><label>Quantity</label><input name="qty" type="number" min="1" value="1" required></div>
+                <div class="field"><label>Total amount (RM)</label><input name="amount" type="number" min="0.01" step="0.01" required placeholder="0.00"></div>
+            </div><div class="notice">Customer is recorded as Walk-in / General Public in this demo. Whether a transaction can be consolidated must be checked against current MyInvois rules.</div>
+            <div class="modalactions"><button type="button" class="btn secondary" onclick="closeCashSale()">Cancel</button><button class="btn primary" type="submit">Save cash sale</button></div></form>
+        </div>
     </div>
     <div class="modalbg" id="modal">
         <div class="modal">
@@ -1016,41 +1025,69 @@
     </div>
     <script>
 
-        // Demo-only front-end login. Do not use these credentials for real customer data.
-        const DEMO_EMAIL = 'demo@gmail.com';
-        const DEMO_PASSWORD = '123456';
-
+        // DEMO ONLY: browser-local role system. Replace with backend authentication before production.
+        const seedUsers = [
+            {id:'U-001',name:'You',email:'superadmin@gmail.com',password:'123456',role:'Superadmin',active:true},
+            {id:'U-002',name:'Business Partner',email:'demo@gmail.com',password:'123456',role:'Admin',active:true},
+            {id:'U-003',name:'Staff Member',email:'staff@gmail.com',password:'123456',role:'Staff',active:true}
+        ];
+        let users = JSON.parse(localStorage.getItem('rallystockUsers') || 'null') || seedUsers;
+        // Migrate older demo accounts: Developer is no longer a role; map it to Admin.
+        users = users.filter(u => ['Superadmin','Admin','Staff','Developer'].includes(u.role)).map(u => ({...u, role:u.role==='Developer'?'Admin':u.role}));
+        let currentUser = null;
+        const saveUsers=()=>localStorage.setItem('rallystockUsers',JSON.stringify(users));
+        function loginUser(email,password){return users.find(u=>u.email.toLowerCase()===email&&u.password===password&&u.active);}
         document.getElementById('loginForm').addEventListener('submit', function (event) {
-            event.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim().toLowerCase();
-            const password = document.getElementById('loginPassword').value;
-            if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-                document.getElementById('loginError').style.display = 'none';
-                document.getElementById('loginScreen').style.display = 'none';
-                sessionStorage.setItem('rallystockDemoLoggedIn', 'true');
-            } else {
-                document.getElementById('loginError').style.display = 'block';
-            }
+            event.preventDefault(); const email=document.getElementById('loginEmail').value.trim().toLowerCase(); const password=document.getElementById('loginPassword').value;
+            const user=loginUser(email,password); if(user){currentUser=user;sessionStorage.setItem('rallystockCurrentUser',user.id);document.getElementById('loginError').style.display='none';document.getElementById('loginScreen').style.display='none';applyPermissions();}
+            else document.getElementById('loginError').style.display='block';
         });
-
-        function logout() {
-            sessionStorage.removeItem('rallystockDemoLoggedIn');
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('loginPassword').value = '';
+        function applyPermissions(){
+            if(!currentUser)return;
+            document.querySelector('.user span').textContent=currentUser.name+' · '+currentUser.role;
+            document.querySelector('.avatar').textContent=currentUser.name.charAt(0).toUpperCase();
+            const canViewUsers=['Superadmin','Admin'].includes(currentUser.role);
+            document.getElementById('usersNav').style.display=canViewUsers?'flex':'none';
+            document.getElementById('userForm').style.display=currentUser.role==='Superadmin'?'grid':'none';
+            document.querySelectorAll('#userRows tr').forEach(()=>{});
+            if(currentUser.role==='Staff') document.getElementById('invoiceNavGroup').style.display='none';
+            renderUsers();
         }
-
-        if (sessionStorage.getItem('rallystockDemoLoggedIn') === 'true') {
-            document.getElementById('loginScreen').style.display = 'none';
-        }
+        function logout(){sessionStorage.removeItem('rallystockCurrentUser');currentUser=null;document.getElementById('loginScreen').style.display='flex';document.getElementById('loginPassword').value='';}
+        const savedUserId=sessionStorage.getItem('rallystockCurrentUser'); if(savedUserId){currentUser=users.find(u=>u.id===savedUserId&&u.active)||null;if(currentUser){document.getElementById('loginScreen').style.display='none';}}
         let items = [{ name: 'Yonex Astrox 88D', brand: 'Yonex', category: 'Racket', condition: 'Good', cost: 160, price: 280, qty: 1, sku: 'RKT-001', emoji: '🏸' }, { name: 'Victor Team Jersey', brand: 'Victor', category: 'Apparel', condition: 'Like New', cost: 18, price: 35, qty: 4, sku: 'APP-024', emoji: '👕' }, { name: 'Li-Ning Sports Bag', brand: 'Li-Ning', category: 'Bag', condition: 'Good', cost: 35, price: 65, qty: 2, sku: 'BAG-008', emoji: '🎒' }, { name: 'Yonex Court Shoes', brand: 'Yonex', category: 'Shoes', condition: 'Fair', cost: 40, price: 80, qty: 1, sku: 'SHO-012', emoji: '👟' }, { name: 'Apacs Training Racket', brand: 'Apacs', category: 'Racket', condition: 'Good', cost: 45, price: 90, qty: 0, sku: 'RKT-015', emoji: '🏸' }]; let next = 26; let sales = 385;
-        function showPage(p) { document.querySelectorAll('.page').forEach(x => x.classList.toggle('active', x.id === p)); document.querySelectorAll('.nav button').forEach(x => x.classList.toggle('active', x.dataset.page === p)); document.getElementById('crumb').textContent = ({ dashboard: 'Dashboard', products: 'Products', stock: 'Stock Management', sales: 'Sales', invoice: 'E-Invoice' })[p]; if (p === 'products') renderProducts() }
-        document.querySelectorAll('.nav button').forEach(b => b.onclick = () => showPage(b.dataset.page)); function openModal() { document.getElementById('modal').classList.add('show') } function closeModal() { document.getElementById('modal').classList.remove('show') }
+        function toggleInvoiceMenu(){const m=document.getElementById('invoiceSubmenu');m.classList.toggle('open');document.getElementById('invoiceArrow').textContent=m.classList.contains('open')?'⌃':'⌄';}
+        function openInvoiceSection(tab){showPage('invoice');document.getElementById('invoiceSubmenu').classList.add('open');document.getElementById('invoiceArrow').textContent='⌃';showInvoiceTab(tab);}
+        function showInvoiceTab(tab){const create=tab==='create';document.getElementById('eiCreatePanel').classList.toggle('active',create);document.getElementById('eiStatusPanel').classList.toggle('active',!create);document.getElementById('eiTabCreate').classList.toggle('active',create);document.getElementById('eiTabStatus').classList.toggle('active',!create);document.getElementById('invoiceSubmenu').classList.add('open');document.getElementById('invoiceArrow').textContent='⌃';document.querySelectorAll('#invoiceSubmenu button').forEach((b,i)=>b.classList.toggle('active',i===(create?0:1)));if(!create)renderSubmissionStatus();}
+        function submitToMyInvois(){alert('MyInvois API is not connected yet. Your consolidation draft has NOT been submitted to LHDN. Once the API is integrated, this button will submit and return the official status.');}
+        function renderSubmissionStatus(){const body=document.getElementById('submissionRows');if(!body)return;body.innerHTML=eiDrafts.map(d=>`<tr><td>${escapeHtml(d.ref)}</td><td>${escapeHtml(d.month)}</td><td>${money(d.total)}</td><td><span class="pill low">Not submitted</span></td><td>—</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No submissions yet. A draft is not a submission.</td></tr>';}
+        function showPage(p) { if(p==='users'&&!['Superadmin','Admin'].includes(currentUser?.role)){alert('You do not have permission to view User Management.');return;} document.querySelectorAll('.page').forEach(x => x.classList.toggle('active', x.id === p)); document.querySelectorAll('.nav button[data-page]').forEach(x => x.classList.toggle('active', x.dataset.page === p)); document.getElementById('crumb').textContent = ({ dashboard: 'Dashboard', products: 'Products', stock: 'Stock Management', sales: 'Sales', invoice: 'E-Invoice', users:'User Management' })[p]; if (p === 'products') renderProducts(); if (p === 'invoice') renderEi(); if(p==='users')renderUsers(); }
+        document.querySelectorAll('.nav button[data-page]').forEach(b => { if(b.dataset.page!=='invoice') b.onclick = () => showPage(b.dataset.page); }); function openModal() { document.getElementById('modal').classList.add('show') } function closeModal() { document.getElementById('modal').classList.remove('show') }
         function renderProducts() { let q = (document.getElementById('search')?.value || '').toLowerCase(); document.getElementById('productRows').innerHTML = items.filter(i => (i.name + i.brand + i.sku).toLowerCase().includes(q)).map(i => `<tr><td><div class="product"><div class="thumb">${i.emoji || '📦'}</div><div>${i.name}<div class="muted" style="font-weight:400;margin-top:3px">${i.brand || ''} ${i.size || ''}</div></div></div></td><td>${i.sku}</td><td>${i.category}</td><td>${i.condition}</td><td>RM ${i.cost}</td><td><b>RM ${i.price}</b></td><td><span class="pill ${i.qty === 0 ? 'sold' : i.qty <= 1 ? 'low' : ''}">${i.qty === 0 ? 'Sold' : i.qty <= 1 ? 'Low stock' : 'Available'} · ${i.qty}</span></td><td><button class="btn secondary" style="padding:6px 9px" onclick="sellBySku('${i.sku}')" ${i.qty === 0 ? 'disabled' : ''}>Sell</button></td></tr>`).join('') || '<tr><td colspan="8" class="empty">No matching products</td></tr>' }
         document.getElementById('productForm').onsubmit = e => { e.preventDefault(); let f = new FormData(e.target), n = f.get('name'); items.unshift({ name: n, brand: f.get('brand'), category: f.get('category'), condition: f.get('condition'), cost: +f.get('cost'), price: +f.get('price'), qty: +f.get('qty'), size: f.get('size'), sku: 'ITM-' + String(next++).padStart(3, '0'), emoji: f.get('category') === 'Apparel' ? '👕' : f.get('category') === 'Shoes' ? '👟' : f.get('category') === 'Racket' ? '🏸' : '📦' }); e.target.reset(); closeModal(); renderProducts(); updateStats(); showPage('products') };
         function updateStats() { document.getElementById('totalItems').textContent = 128 + items.length - 5; document.getElementById('stockValue').textContent = 'RM ' + items.reduce((a, i) => a + i.cost * i.qty, 0).toLocaleString(); document.getElementById('lowStock').textContent = items.filter(i => i.qty <= 1).length; document.getElementById('availableCount').textContent = items.reduce((a, i) => a + i.qty, 0) }
         function sellBySku(sku) { let i = items.find(x => x.sku === sku); if (!i || i.qty < 1) return alert('This item is out of stock.'); if (confirm(`Record sale for ${i.name} at RM ${i.price}?`)) { i.qty--; sales += i.price; document.getElementById('salesToday').textContent = 'RM ' + sales; let tr = document.createElement('tr'); tr.innerHTML = `<td>#SO-${String(83 + document.querySelectorAll('#salesRows tr').length).padStart(4, '0')}</td><td>${i.name}</td><td>Just now</td><td>Admin</td><td>RM ${i.price}</td><td><span class="pill">Completed</span></td>`; document.getElementById('salesRows').prepend(tr); renderProducts(); updateStats(); alert('Sale recorded. Inventory has been updated.') } }
         function sellItem() { let available = items.find(i => i.qty > 0); if (!available) return alert('No available stock. Add a product first.'); sellBySku(available.sku) } function stockAction() { let i = items.find(x => x.qty > 0); if (i) { i.qty++; updateStats(); alert(`Stock In recorded for ${i.name}. Quantity is now ${i.qty}.`) } else { openModal() } } function makeInvoice() { alert('Demo invoice created. MyInvois submission is not connected in this prototype.') }
-        renderProducts(); updateStats();
+
+        // E-invoice MVP demo: browser-local records only; no MyInvois submission.
+        let cashSales = JSON.parse(localStorage.getItem('rallystockCashSales') || '[]');
+        let eiDrafts = JSON.parse(localStorage.getItem('rallystockEiDrafts') || '[]');
+        const money = n => 'RM ' + Number(n || 0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
+        function openCashSale(){ const f=document.getElementById('cashSaleForm'); f.date.value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16); document.getElementById('cashSaleModal').classList.add('show'); }
+        function closeCashSale(){document.getElementById('cashSaleModal').classList.remove('show')}
+        document.getElementById('cashSaleForm').addEventListener('submit',e=>{e.preventDefault();const f=new FormData(e.target);const sale={id:'CS-'+Date.now(),date:f.get('date'),payment:f.get('payment'),description:f.get('description').trim(),qty:Number(f.get('qty')),amount:Number(f.get('amount')),status:'Awaiting review'};cashSales.unshift(sale);localStorage.setItem('rallystockCashSales',JSON.stringify(cashSales));e.target.reset();closeCashSale();renderEi();});
+        function renderEi(){const month=document.getElementById('eiMonth')?.value || new Date().toISOString().slice(0,7);const list=cashSales.filter(x=>x.date.slice(0,7)===month);document.getElementById('eiSalesCount').textContent=list.length;document.getElementById('eiSalesValue').textContent=money(list.reduce((a,x)=>a+x.amount,0));document.getElementById('eiPending').textContent=list.filter(x=>x.status==='Awaiting review').length;document.getElementById('eiDrafts').textContent=eiDrafts.length;document.getElementById('eiSalesRows').innerHTML=cashSales.map(x=>`<tr><td>${x.id}</td><td>${new Date(x.date).toLocaleString()}</td><td>${escapeHtml(x.description)}</td><td>${escapeHtml(x.payment)}</td><td>${money(x.amount)}</td><td><span class="pill ${x.status==='Awaiting review'?'low':''}">${x.status}</span></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No cash sales recorded yet.</td></tr>';document.getElementById('eiDraftList').innerHTML=eiDrafts.map(d=>`<div class="card" style="margin-bottom:9px;box-shadow:none"><b>${d.month} · ${d.ref}</b><div class="muted" style="margin-top:6px">${d.count} transactions · ${money(d.total)} · Draft only</div></div>`).join('')||'<div class="empty">No consolidation drafts created.</div>';renderSubmissionStatus();}
+        function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+        function createConsolidation(){const month=document.getElementById('eiMonth').value;if(!month)return alert('Please select a month.');const list=cashSales.filter(x=>x.date.slice(0,7)===month&&x.status==='Awaiting review');if(!list.length)return alert('No unreviewed cash sales found for this month.');if(!confirm(`Create a REVIEW DRAFT for ${list.length} sales totalling ${money(list.reduce((a,x)=>a+x.amount,0))}? This will not submit to MyInvois.`))return;const draft={ref:'DRAFT-'+Date.now(),month,count:list.length,total:list.reduce((a,x)=>a+x.amount,0)};eiDrafts.unshift(draft);list.forEach(x=>x.status='Included in draft '+draft.ref);localStorage.setItem('rallystockEiDrafts',JSON.stringify(eiDrafts));localStorage.setItem('rallystockCashSales',JSON.stringify(cashSales));renderEi();}
+        function exportCashSales(){const rows=[['Reference','Date','Description','Payment','Quantity','Amount RM','Review status'],...cashSales.map(x=>[x.id,x.date,x.description,x.payment,x.qty,x.amount,x.status])];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='rallystock-cash-sales.csv';a.click();URL.revokeObjectURL(a.href);}
+        document.getElementById('eiMonth').value=new Date().toISOString().slice(0,7);
+
+        function renderUsers(){const body=document.getElementById('userRows');if(!body)return;body.innerHTML=users.map(u=>{const isSelf=currentUser&&u.id===currentUser.id;const canManage=currentUser?.role==='Superadmin'&&u.role!=='Superadmin';const canManageStaff=currentUser?.role==='Admin'&&u.role==='Staff';const canEdit=canManage||canManageStaff;return `<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.email)}</td><td><span class="role-tag">${u.role}</span></td><td><span class="pill ${u.active?'':'low'}">${u.active?'Active':'Disabled'}</span></td><td><div class="user-actions">${canEdit?`<button class="btn secondary small-btn" onclick="toggleUser('${u.id}')">${u.active?'Disable':'Enable'}</button><button class="btn secondary small-btn" onclick="changeUserRole('${u.id}')">Change role</button>`:isSelf?'<span class="muted">Your account</span>':'<span class="muted">View only</span>'}</div></td></tr>`}).join('');}
+        document.getElementById('userForm').addEventListener('submit',e=>{e.preventDefault();if(currentUser?.role!=='Superadmin')return alert('Only Superadmin can create users.');const f=new FormData(e.target),email=String(f.get('email')).trim().toLowerCase();if(users.some(u=>u.email.toLowerCase()===email))return alert('This email already exists.');users.push({id:'U-'+Date.now(),name:String(f.get('name')).trim(),email,password:String(f.get('password')),role:String(f.get('role')),active:true});saveUsers();e.target.reset();renderUsers();alert('User created. Share the temporary login details securely.');});
+        function toggleUser(id){const u=users.find(x=>x.id===id);if(!u||u.role==='Superadmin')return;if(currentUser?.role!=='Superadmin'&&!(currentUser?.role==='Admin'&&u.role==='Staff'))return alert('Permission denied.');u.active=!u.active;saveUsers();renderUsers();}
+        function changeUserRole(id){const u=users.find(x=>x.id===id);if(!u||u.role==='Superadmin'||currentUser?.role!=='Superadmin')return alert('Only Superadmin can change this role.');const role=prompt('Enter role: Admin or Staff',u.role);if(!['Admin','Staff'].includes(role))return alert('Invalid role.');u.role=role;saveUsers();renderUsers();}
+        if(currentUser)applyPermissions();
+        renderProducts(); updateStats(); renderEi();
     </script>
 </body>
 
